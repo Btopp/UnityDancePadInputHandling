@@ -1,0 +1,19 @@
+{
+    "name": "SharkBlaster.DancePadInput.Editor",
+    "rootNamespace": "SharkBlaster.DancePadInput.Editor",
+    "references": [
+        "SharkBlaster.DancePadInput",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

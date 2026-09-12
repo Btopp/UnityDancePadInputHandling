@@ -1,0 +1,17 @@
+{
+    "name": "SharkBlaster.DancePadInput.Samples.BasicUsage",
+    "rootNamespace": "SharkBlaster.DancePadInput.Samples",
+    "references": [
+        "SharkBlaster.DancePadInput",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

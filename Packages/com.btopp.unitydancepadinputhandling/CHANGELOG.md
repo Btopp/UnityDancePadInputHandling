@@ -4,7 +4,7 @@ All notable changes to this package are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the package uses [Semantic Versioning](https://semver.org/).
 
-## [0.2.0] - unreleased
+## [0.2.0] - 2026-10-07
 
 ### Added
 - `DancePadManager.AddKnownProfile()` and `KnownProfiles`, so a host can create the manager from code
@@ -13,6 +13,7 @@ and the package uses [Semantic Versioning](https://semver.org/).
   over to the first and disables itself instead of bridging the same pads again (every press would
   otherwise arrive twice).
 - `persistAcrossScenes` option: keeps the manager, and every connected pad, alive across scene loads.
+  Can also be switched from code at any time (`PersistAcrossScenes`).
 - `reportUnknownGamepads` option (off by default): devices the Input System already recognizes as a
   gamepad (Xbox, PlayStation, Switch Pro ...) no longer fire `UnknownPadDetected`, so plugging in a
   regular controller doesn't open the calibration menu. Gamepads with a matching profile still connect.
@@ -25,6 +26,14 @@ and the package uses [Semantic Versioning](https://semver.org/).
   references scripts by GUID; code using the old namespace and asmdefs referencing the old assembly
   name have to be updated.
 - Minimum Unity version is now 6000.0 (required by `com.unity.ugui` 2.0.0; 2021.3 was never valid).
+- The basic usage sample gets the manager through `DancePadManager.Instance` instead of a scene
+  reference.
+
+### Fixed
+- Pads that were already plugged in at startup could fire `PadConnected`/`UnknownPadDetected` before
+  other scripts had subscribed, depending on script order. The manager now runs early
+  (`DefaultExecutionOrder(-1000)`, so `Instance` is set before other scripts' `OnEnable`) and does its
+  first device scan in `Start`.
 
 ## [0.1.0] - 2026-09-12
 

@@ -5,6 +5,9 @@
   "description": "Calibrate arbitrary/non-standard USB dance pads once, then use them as a regular Unity Input System gamepad (dpad, 4 face buttons, start, select, special) in any project.",
   "unity": "6000.0",
   "license": "MIT-0",
+  "documentationUrl": "https://github.com/Btopp/UnityDancePadInputHandling#readme",
+  "changelogUrl": "https://github.com/Btopp/UnityDancePadInputHandling/blob/main/Packages/com.btopp.unitydancepadinputhandling/CHANGELOG.md",
+  "licensesUrl": "https://github.com/Btopp/UnityDancePadInputHandling/blob/main/LICENSE",
   "dependencies": {
     "com.unity.inputsystem": "1.19.0",
     "com.unity.ugui": "2.0.0"
@@ -23,7 +26,7 @@
   "samples": [
     {
       "displayName": "Basic Usage",
-      "description": "Minimal scene script showing how to listen for pad connections and read a calibrated dance pad through Gamepad.current.",
+      "description": "Minimal scene script showing how to listen for pad connections and read a calibrated dance pad like any other Gamepad.",
       "path": "Samples~/BasicUsage"
     }
   ]

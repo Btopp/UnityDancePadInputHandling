@@ -3,24 +3,35 @@ using UnityEngine.InputSystem;
 
 namespace Btopp.UnityDancePadInputHandling.Samples
 {
-    // Drop this next to a DancePadManager in any scene. It shows the whole
+    // Drop this into any scene that has a DancePadManager. It shows the whole
     // integration surface a host project needs: react to new/unknown pads,
     // trigger calibration, and read the calibrated pad exactly like any
     // other Gamepad once connected.
     public class DancePadUsageExample : MonoBehaviour
     {
-        [SerializeField] private DancePadManager manager;
+        private DancePadManager manager;
 
         private void OnEnable()
         {
+            // Always go through Instance rather than a reference to the
+            // manager in this scene: that one may be a duplicate of a
+            // persistent manager and has already removed itself.
+            manager = DancePadManager.Instance;
+            if (manager == null)
+            {
+                Debug.LogWarning("No DancePadManager found - add one to the scene.");
+                return;
+            }
             manager.PadConnected += OnPadConnected;
             manager.UnknownPadDetected += OnUnknownPadDetected;
         }
 
         private void OnDisable()
         {
+            if (manager == null) return;
             manager.PadConnected -= OnPadConnected;
             manager.UnknownPadDetected -= OnUnknownPadDetected;
+            manager = null;
         }
 
         private void OnPadConnected(DancePadBridge bridge)

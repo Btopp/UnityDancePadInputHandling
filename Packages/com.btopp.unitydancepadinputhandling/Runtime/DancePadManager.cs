@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace Btopp.UnityDancePadInputHandling
 {
@@ -12,6 +13,11 @@ namespace Btopp.UnityDancePadInputHandling
     // matching pads as they're plugged in. Pads with no known profile fire
     // UnknownPadDetected so the host can show the in-game calibration menu
     // (DancePadCalibrationMenu) for that device.
+    //
+    // Runs early so Instance is set before other scripts' OnEnable, and
+    // looks for already plugged-in pads only in Start, so scripts that
+    // subscribe in their Awake/OnEnable still get those events.
+    [DefaultExecutionOrder(-1000)]
     public class DancePadManager : MonoBehaviour
     {
         [Tooltip("Profiles calibrated ahead of time (editor tool) and shipped with the build.")]
@@ -36,6 +42,7 @@ namespace Btopp.UnityDancePadInputHandling
         public event Action<InputDevice> UnknownPadDetected;
 
         private readonly Dictionary<InputDevice, DancePadBridge> activeBridges = new Dictionary<InputDevice, DancePadBridge>();
+        private bool started;
 
         public IReadOnlyDictionary<InputDevice, DancePadBridge> ActiveBridges => activeBridges;
 
@@ -47,27 +54,32 @@ namespace Btopp.UnityDancePadInputHandling
             set => reportUnknownGamepads = value;
         }
 
-        // Takes effect in Awake: set it before activating a manager created from code.
+        // Takes effect right away, also on a manager created with AddComponent
+        // (whose Awake has already run by the time the host sets this).
         public bool PersistAcrossScenes
         {
             get => persistAcrossScenes;
-            set => persistAcrossScenes = value;
+            set
+            {
+                persistAcrossScenes = value;
+                if (Instance == this) ApplyPersistence();
+            }
         }
 
         // For hosts that create the manager from code instead of a scene.
-        // To also get UnknownPadDetected for pads that are already plugged
-        // in, add the component to an inactive GameObject, add profiles,
-        // subscribe to the events and only then activate it. Profiles added
-        // while the manager is running connect matching pads right away.
+        // Profiles and event handlers added in the same frame as AddComponent
+        // are in place before the first scan in Start. Profiles added later
+        // connect matching pads right away.
         public void AddKnownProfile(DancePadMappingProfile profile)
         {
             if (profile == null || knownProfiles.Contains(profile)) return;
             knownProfiles.Add(profile);
             if (!isActiveAndEnabled) return;
 
-            foreach (var device in GetCandidateDevices())
+            // Copy first: connecting a pad adds a virtual device to the list.
+            foreach (var device in InputSystem.devices.ToArray())
             {
-                if (activeBridges.ContainsKey(device)) continue;
+                if (!IsCandidateDevice(device) || activeBridges.ContainsKey(device)) continue;
                 if (profile.Matches(device.description.product, device.description.manufacturer))
                     Connect(device, profile);
             }
@@ -104,10 +116,20 @@ namespace Btopp.UnityDancePadInputHandling
             }
 
             Instance = this;
+            if (persistAcrossScenes) ApplyPersistence();
+        }
+
+        private void ApplyPersistence()
+        {
             if (persistAcrossScenes)
             {
                 transform.SetParent(null);
                 DontDestroyOnLoad(gameObject);
+            }
+            else if (gameObject.scene.name == "DontDestroyOnLoad")
+            {
+                // Back into the active scene, so it unloads with it again.
+                SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
             }
         }
 
@@ -120,10 +142,24 @@ namespace Btopp.UnityDancePadInputHandling
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => Instance = null;
 
+        private void Start()
+        {
+            started = true;
+            ScanDevices();
+        }
+
         private void OnEnable()
         {
             InputSystem.onDeviceChange += OnDeviceChange;
-            foreach (var device in InputSystem.devices)
+            // The first scan waits for Start (see class comment); after a
+            // disable/enable cycle there is nobody left to wait for.
+            if (started) ScanDevices();
+        }
+
+        private void ScanDevices()
+        {
+            // Copy first: connecting a pad adds a virtual device to the list.
+            foreach (var device in InputSystem.devices.ToArray())
                 if (IsCandidateDevice(device))
                     TryAutoConnect(device);
         }

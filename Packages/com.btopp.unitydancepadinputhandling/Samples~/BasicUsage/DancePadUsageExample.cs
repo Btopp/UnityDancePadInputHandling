@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace SharkBlaster.DancePadInput.Samples
+namespace Btopp.UnityDancePadInputHandling.Samples
 {
     // Drop this next to a DancePadManager in any scene. It shows the whole
     // integration surface a host project needs: react to new/unknown pads,

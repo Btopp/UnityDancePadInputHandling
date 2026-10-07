@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
-namespace SharkBlaster.DancePadInput
+namespace Btopp.UnityDancePadInputHandling
 {
     // A virtual gamepad the DancePadBridge drives from a calibrated mapping.
     // Reusing GamepadState/Gamepad means downstream game code just uses

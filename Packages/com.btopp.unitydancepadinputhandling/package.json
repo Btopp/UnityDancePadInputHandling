@@ -1,9 +1,10 @@
 {
-  "name": "com.sharkblaster.dancepadinput",
-  "version": "0.1.0",
-  "displayName": "Dance Pad Input",
+  "name": "com.btopp.unitydancepadinputhandling",
+  "version": "0.2.0",
+  "displayName": "Unity Dance Pad Input Handling",
   "description": "Calibrate arbitrary/non-standard USB dance pads once, then use them as a regular Unity Input System gamepad (dpad, 4 face buttons, start, select, special) in any project.",
-  "unity": "2021.3",
+  "unity": "6000.0",
+  "license": "MIT-0",
   "dependencies": {
     "com.unity.inputsystem": "1.19.0",
     "com.unity.ugui": "2.0.0"
@@ -16,7 +17,8 @@
     "calibration"
   ],
   "author": {
-    "name": "sharkblaster"
+    "name": "Btopp",
+    "url": "https://github.com/Btopp"
   },
   "samples": [
     {

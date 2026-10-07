@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace SharkBlaster.DancePadInput.Editor
+namespace Btopp.UnityDancePadInputHandling.Editor
 {
     // Dev-time counterpart to DancePadCalibrationMenu: create/edit a
     // DancePadMappingProfile asset for a specific pad model without
@@ -22,7 +22,7 @@ namespace SharkBlaster.DancePadInput.Editor
         private int stepIndex = -1;
         private string statusMessage = "";
 
-        [MenuItem("Tools/Dance Pad Input/Calibration Window")]
+        [MenuItem("Tools/Unity Dance Pad Input Handling/Calibration Window")]
         public static void Open()
         {
             var window = GetWindow<DancePadCalibrationWindow>(true, "Dance Pad Calibration", true);

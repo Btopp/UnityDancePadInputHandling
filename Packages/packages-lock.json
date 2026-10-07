@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "com.sharkblaster.dancepadinput": {
-      "version": "file:com.sharkblaster.dancepadinput",
+    "com.btopp.unitydancepadinputhandling": {
+      "version": "file:com.btopp.unitydancepadinputhandling",
       "depth": 0,
       "source": "embedded",
       "dependencies": {

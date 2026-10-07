@@ -1,6 +1,6 @@
 using System;
 
-namespace SharkBlaster.DancePadInput
+namespace Btopp.UnityDancePadInputHandling
 {
     // One resolved slot: which raw control on the source device maps to a
     // logical function. controlPath is relative to the device root (e.g.

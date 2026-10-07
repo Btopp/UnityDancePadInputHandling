@@ -2,7 +2,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-namespace SharkBlaster.DancePadInput
+namespace Btopp.UnityDancePadInputHandling
 {
     // Persists mapping profiles created/edited at runtime (in-game
     // calibration menu) to disk, keyed by device product name, so a pad

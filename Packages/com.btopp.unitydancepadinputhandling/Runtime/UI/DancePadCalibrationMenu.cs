@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
-namespace SharkBlaster.DancePadInput
+namespace Btopp.UnityDancePadInputHandling
 {
     // Self-contained, code-built calibration wizard usable inside a running
     // build (no prefab or scene setup needed - it builds its own Canvas and

@@ -1,11 +1,13 @@
 {
-    "name": "SharkBlaster.DancePadInput",
-    "rootNamespace": "SharkBlaster.DancePadInput",
+    "name": "Btopp.UnityDancePadInputHandling.Editor",
+    "rootNamespace": "Btopp.UnityDancePadInputHandling.Editor",
     "references": [
-        "Unity.InputSystem",
-        "UnityEngine.UI"
+        "Btopp.UnityDancePadInputHandling",
+        "Unity.InputSystem"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

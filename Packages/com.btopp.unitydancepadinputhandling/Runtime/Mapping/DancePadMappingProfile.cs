@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace SharkBlaster.DancePadInput
+namespace Btopp.UnityDancePadInputHandling
 {
     // One calibrated dance pad model. deviceProduct/deviceManufacturer match
     // InputDevice.description so a shipped profile (created once via the
     // editor calibration window) or a runtime override (created via the
     // in-game calibration menu) auto-applies whenever a matching pad is
     // plugged in again, without recalibrating.
-    [CreateAssetMenu(fileName = "DancePadProfile", menuName = "Dance Pad Input/Mapping Profile")]
+    [CreateAssetMenu(fileName = "DancePadProfile", menuName = "Unity Dance Pad Input Handling/Mapping Profile")]
     public class DancePadMappingProfile : ScriptableObject
     {
         public string deviceProduct;

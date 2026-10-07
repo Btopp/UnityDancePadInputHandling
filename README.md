@@ -1,2 +1,2 @@
-# DancePadInput
+# UnityDancePadInputHandling
 Handle dancepad input

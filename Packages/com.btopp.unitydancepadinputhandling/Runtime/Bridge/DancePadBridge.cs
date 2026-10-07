@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 
-namespace SharkBlaster.DancePadInput
+namespace Btopp.UnityDancePadInputHandling
 {
     // Reads the raw pad device every input update and forwards its state,
     // translated through a DancePadMappingProfile, onto a virtual

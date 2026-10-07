@@ -1,8 +1,8 @@
 {
-    "name": "SharkBlaster.DancePadInput.Samples.BasicUsage",
-    "rootNamespace": "SharkBlaster.DancePadInput.Samples",
+    "name": "Btopp.UnityDancePadInputHandling.Samples.BasicUsage",
+    "rootNamespace": "Btopp.UnityDancePadInputHandling.Samples",
     "references": [
-        "SharkBlaster.DancePadInput",
+        "Btopp.UnityDancePadInputHandling",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

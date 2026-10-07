@@ -1,4 +1,4 @@
-namespace SharkBlaster.DancePadInput
+namespace Btopp.UnityDancePadInputHandling
 {
     // The 11 physical controls every supported dance pad has, regardless of
     // which raw HID button index each one happens to report on a given pad.

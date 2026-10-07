@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.InputSystem;
 
-namespace SharkBlaster.DancePadInput
+namespace Btopp.UnityDancePadInputHandling
 {
     // Captures "whichever control on the target device just got actuated",
     // regardless of whether the pad reports a given button as a digital

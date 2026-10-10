@@ -1,6 +1,6 @@
 {
   "name": "com.btopp.unitydancepadinputhandling",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "displayName": "Unity Dance Pad Input Handling",
   "description": "Calibrate arbitrary/non-standard USB dance pads once, then use them as a regular Unity Input System gamepad (dpad, 4 face buttons, start, select, special) in any project.",
   "unity": "6000.0",

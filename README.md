@@ -24,13 +24,13 @@ game reads it through `dpad`, `buttonNorth`, `startButton` and so on, with no da
 *Window → Package Manager → + → Add package from git URL…* and enter:
 
 ```
-https://github.com/Btopp/UnityDancePadInputHandling.git?path=/Packages/com.btopp.unitydancepadinputhandling#v0.2.0
+https://github.com/Btopp/UnityDancePadInputHandling.git?path=/Packages/com.btopp.unitydancepadinputhandling#v0.2.1
 ```
 
 Or add it to `Packages/manifest.json`:
 
 ```json
-"com.btopp.unitydancepadinputhandling": "https://github.com/Btopp/UnityDancePadInputHandling.git?path=/Packages/com.btopp.unitydancepadinputhandling#v0.2.0"
+"com.btopp.unitydancepadinputhandling": "https://github.com/Btopp/UnityDancePadInputHandling.git?path=/Packages/com.btopp.unitydancepadinputhandling#v0.2.1"
 ```
 
 The part after `#` is the version tag. Leave it out to always get the latest state of `main`.
@@ -38,9 +38,11 @@ The part after `#` is the version tag. Leave it out to always get the latest sta
 ## Quick start
 
 1. **Calibrate your pad.** Plug it in and open *Tools → Unity Dance Pad Input Handling → Calibration
-   Window*. Pick the pad, click *Start Calibration* and press each button when asked (Up, Down, Left,
-   Right, Symbol 1–4, Start, Select, Special). Buttons your pad doesn't have can be skipped. Then click
-   *Save As New Asset*.
+   Window*. Step on the pad: the window shows which device the press came from, *Select* picks it. Click
+   *Start Calibration* and press and release each button when asked (Up, Down, Left, Right, Symbol 1–4,
+   Start, Select, Special). A button counts once it is released, and a button already taken can't be
+   used again. Buttons your pad doesn't have can be skipped, Escape cancels. Then click *Save As New
+   Asset* and pick a new file name.
 2. **Add the manager.** Put a `DancePadManager` on a GameObject in your first scene, drag the profile
    into *Known Profiles* and tick *Persist Across Scenes*.
 3. **Read the pad** like any gamepad:
@@ -92,8 +94,8 @@ void OnEnable()
 }
 ```
 
-The menu brings its own canvas and steps through all buttons. *Skip* and *Cancel* are on-screen buttons,
-so keep a mouse at hand. The result is saved as JSON under
+The menu brings its own canvas and steps through all buttons, asking to press and release each one.
+*Skip* and *Cancel* are on-screen buttons, so keep a mouse at hand (Escape cancels too). The result is saved as JSON under
 `Application.persistentDataPath/DancePadProfiles/` and from then on takes precedence over a shipped
 profile for that pad model on that machine. To recalibrate a pad that is already connected, pass its
 source device:
@@ -132,11 +134,12 @@ handlers set up in the same frame as `AddComponent` are in place in time.
 - **Use `DancePadManager.Instance`.** Only one manager is active at a time. A second one, for example
   from loading the first scene again, hands its profiles over to the first and removes itself.
   Otherwise every pad would be bridged twice and every press would arrive twice.
-- **One frame of delay.** The virtual pad gets its state one input update after the real one. For
-  stepping on a pad that is not noticeable.
-- **Pads that report two directions on one axis.** After calibrating, check that each direction got its
-  own control path in the calibration window (e.g. `stick/left` and `stick/right`). If two directions
-  show the same path, the pad reports them on a single axis, and this version can't tell them apart.
+- **Arrows on an axis or a hat.** Many pads report their arrows on a stick or a hat switch. Calibration
+  captures each direction on its own (`stick/left`, `stick/right`, `hat/up` …). After calibrating, check
+  in the calibration window that every function got a different control path.
+- **A button that is never captured** doesn't reach the computer at all. Check it in the Input Debugger
+  (*Window → Analysis → Input Debugger*) or in Windows' game controller settings (`joy.cpl`); if it
+  doesn't show up there either, it's the pad, not the calibration.
 
 ## Working on the package
 

@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace Btopp.UnityDancePadInputHandling.Editor
 {
@@ -21,6 +23,10 @@ namespace Btopp.UnityDancePadInputHandling.Editor
         private DancePadCalibrator calibrator;
         private int stepIndex = -1;
         private string statusMessage = "";
+        private MessageType statusType = MessageType.Info;
+        private InputDevice lastPressedDevice;
+        // Controls captured in this run; the next steps can't take them again.
+        private readonly List<string> capturedPaths = new List<string>();
 
         [MenuItem("Tools/Unity Dance Pad Input Handling/Calibration Window")]
         public static void Open()
@@ -34,11 +40,15 @@ namespace Btopp.UnityDancePadInputHandling.Editor
             DancePadDevice.EnsureRegistered();
             RefreshDevices();
             EditorApplication.update += OnEditorUpdate;
+            InputSystem.onEvent += OnInputEvent;
+            InputSystem.onDeviceChange += OnDeviceChange;
         }
 
         private void OnDisable()
         {
             EditorApplication.update -= OnEditorUpdate;
+            InputSystem.onEvent -= OnInputEvent;
+            InputSystem.onDeviceChange -= OnDeviceChange;
             calibrator?.Dispose();
             calibrator = null;
         }
@@ -48,6 +58,26 @@ namespace Btopp.UnityDancePadInputHandling.Editor
             // Repaint continuously while capturing so the pad's live input
             // (visible in the Input Debugger too) feels responsive here.
             if (calibrator != null) Repaint();
+        }
+
+        // Shows which device a button press came from, so the pad can be
+        // told apart from other controllers by just stepping on it. Axes
+        // count too: many pads report their arrows on a stick.
+        private void OnInputEvent(InputEventPtr eventPtr, InputDevice device)
+        {
+            if (device == lastPressedDevice || !DancePadManager.IsCandidateDevice(device)) return;
+            if (!eventPtr.HasButtonPress(0.5f, buttonControlsOnly: false)) return;
+            lastPressedDevice = device;
+            Repaint();
+        }
+
+        private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (change != InputDeviceChange.Added && change != InputDeviceChange.Removed) return;
+            if (change == InputDeviceChange.Removed && device == lastPressedDevice) lastPressedDevice = null;
+            // Keep the list as is while calibrating, the selected index must not shift.
+            if (stepIndex < 0) RefreshDevices();
+            Repaint();
         }
 
         private void RefreshDevices()
@@ -70,10 +100,14 @@ namespace Btopp.UnityDancePadInputHandling.Editor
                     .Select(d => $"{d.displayName} [{d.description.product}]")
                     .DefaultIfEmpty("<no candidate devices connected>")
                     .ToArray();
-                using (new EditorGUI.DisabledScope(candidateDevices.Length == 0))
+                using (new EditorGUI.DisabledScope(candidateDevices.Length == 0 || stepIndex >= 0))
                     selectedDeviceIndex = EditorGUILayout.Popup(selectedDeviceIndex, names);
-                if (GUILayout.Button("Refresh", GUILayout.Width(70))) RefreshDevices();
+                using (new EditorGUI.DisabledScope(stepIndex >= 0))
+                {
+                    if (GUILayout.Button("Refresh", GUILayout.Width(70))) RefreshDevices();
+                }
             }
+            DrawLastPressedDevice();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("2. Optional: re-calibrate an existing profile", EditorStyles.boldLabel);
@@ -92,7 +126,27 @@ namespace Btopp.UnityDancePadInputHandling.Editor
             else if (workingProfile != null) DrawSaveOptions();
 
             if (!string.IsNullOrEmpty(statusMessage))
-                EditorGUILayout.HelpBox(statusMessage, MessageType.Info);
+                EditorGUILayout.HelpBox(statusMessage, statusType);
+        }
+
+        private void DrawLastPressedDevice()
+        {
+            if (lastPressedDevice == null)
+            {
+                EditorGUILayout.HelpBox("Step on the pad to see which device it is.", MessageType.None);
+                return;
+            }
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Last button press from",
+                    $"{lastPressedDevice.displayName} [{lastPressedDevice.description.product}]");
+                var index = Array.IndexOf(candidateDevices, lastPressedDevice);
+                using (new EditorGUI.DisabledScope(index < 0 || index == selectedDeviceIndex || stepIndex >= 0))
+                {
+                    if (GUILayout.Button("Select", GUILayout.Width(70))) selectedDeviceIndex = index;
+                }
+            }
         }
 
         private void DrawSaveOptions()
@@ -124,25 +178,48 @@ namespace Btopp.UnityDancePadInputHandling.Editor
             workingProfile.deviceManufacturer = device.description.manufacturer;
 
             stepIndex = 0;
-            statusMessage = "";
+            capturedPaths.Clear();
+            SetStatus("");
             BeginCaptureForCurrentStep();
+        }
+
+        private void SetStatus(string message, MessageType type = MessageType.Info)
+        {
+            statusMessage = message;
+            statusType = type;
         }
 
         private void BeginCaptureForCurrentStep()
         {
             calibrator?.Dispose();
             calibrator = new DancePadCalibrator(SelectedDevice);
+            try
+            {
+                StartCapture();
+            }
+            catch (Exception e)
+            {
+                // Otherwise the window keeps asking for a button nobody listens for.
+                Debug.LogException(e);
+                CancelCalibration();
+                SetStatus($"Calibration could not start: {e.Message}", MessageType.Error);
+            }
+        }
+
+        private void StartCapture()
+        {
             calibrator.BeginCapture(
                 onCaptured: path =>
                 {
                     workingProfile.SetControlPath(Steps[stepIndex], path);
+                    capturedPaths.Add(path);
                     stepIndex++;
                     if (stepIndex >= Steps.Length)
                     {
                         calibrator?.Dispose();
                         calibrator = null;
                         stepIndex = -1;
-                        statusMessage = "Calibration complete. Save the profile below.";
+                        SetStatus("Calibration complete. Save the profile below.");
                     }
                     else
                     {
@@ -150,7 +227,8 @@ namespace Btopp.UnityDancePadInputHandling.Editor
                     }
                     Repaint();
                 },
-                onCancelled: CancelCalibration);
+                onCancelled: CancelCalibration,
+                excludedPaths: capturedPaths);
         }
 
         private void CancelCalibration()
@@ -158,14 +236,14 @@ namespace Btopp.UnityDancePadInputHandling.Editor
             calibrator?.Dispose();
             calibrator = null;
             stepIndex = -1;
-            statusMessage = "Calibration cancelled.";
+            SetStatus("Calibration cancelled.");
             Repaint();
         }
 
         private void DrawCalibrationStep()
         {
             var function = Steps[stepIndex];
-            EditorGUILayout.HelpBox($"Press the pad button for: {function}\n(Step {stepIndex + 1} / {Steps.Length})", MessageType.Warning);
+            EditorGUILayout.HelpBox($"Press and release the pad button for: {function}\n(Step {stepIndex + 1} / {Steps.Length}, Escape cancels)", MessageType.Warning);
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Skip"))
@@ -176,7 +254,7 @@ namespace Btopp.UnityDancePadInputHandling.Editor
                         calibrator?.Dispose();
                         calibrator = null;
                         stepIndex = -1;
-                        statusMessage = "Calibration complete (some steps skipped). Save the profile below.";
+                        SetStatus("Calibration complete (some steps skipped). Save the profile below.");
                     }
                     else
                     {
@@ -194,12 +272,23 @@ namespace Btopp.UnityDancePadInputHandling.Editor
                 "Choose where to save the calibrated profile.");
             if (string.IsNullOrEmpty(path)) return;
 
+            // CreateAsset replaces whatever is at that path and keeps its GUID,
+            // so every reference to e.g. a config asset would silently point
+            // at this profile instead.
+            var existing = AssetDatabase.LoadMainAssetAtPath(path);
+            if (existing != null && !(existing is DancePadMappingProfile))
+            {
+                SetStatus($"Not saved: {path} is a {existing.GetType().Name}, not a dance pad profile. Choose another file name.",
+                    MessageType.Error);
+                return;
+            }
+
             var asset = CreateInstance<DancePadMappingProfile>();
             asset.CopyFrom(workingProfile);
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.SaveAssets();
             existingProfileAsset = asset;
-            statusMessage = $"Saved to {path}";
+            SetStatus($"Saved to {path}");
         }
 
         private void OverwriteExistingAsset()
@@ -209,7 +298,7 @@ namespace Btopp.UnityDancePadInputHandling.Editor
             existingProfileAsset.CopyFrom(workingProfile);
             EditorUtility.SetDirty(existingProfileAsset);
             AssetDatabase.SaveAssets();
-            statusMessage = $"Overwrote {AssetDatabase.GetAssetPath(existingProfileAsset)}";
+            SetStatus($"Overwrote {AssetDatabase.GetAssetPath(existingProfileAsset)}");
         }
     }
 }

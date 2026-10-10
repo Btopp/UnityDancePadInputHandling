@@ -45,6 +45,8 @@ namespace Btopp.UnityDancePadInputHandling
         private Action onCancelled;
         private Dictionary<DancePadFunction, string> labels;
         private int stepIndex;
+        // Controls captured in this run; the next steps can't take them again.
+        private readonly List<string> capturedPaths = new List<string>();
 
         private Text promptText;
         private Text detailText;
@@ -82,6 +84,7 @@ namespace Btopp.UnityDancePadInputHandling
 
             BuildUi();
             stepIndex = 0;
+            capturedPaths.Clear();
             RunStep();
         }
 
@@ -95,19 +98,30 @@ namespace Btopp.UnityDancePadInputHandling
 
             var function = Steps[stepIndex];
             var label = labels.TryGetValue(function, out var text) ? text : function.ToString();
-            promptText.text = $"Press the pad button for:\n{label}";
+            promptText.text = $"Press and release the pad button for:\n{label}";
             detailText.text = $"Step {stepIndex + 1} / {Steps.Length}    Device: {device.displayName}";
 
             calibrator?.Dispose();
             calibrator = new DancePadCalibrator(device);
-            calibrator.BeginCapture(
-                onCaptured: path =>
-                {
-                    profile.SetControlPath(function, path);
-                    stepIndex++;
-                    RunStep();
-                },
-                onCancelled: Cancel);
+            try
+            {
+                calibrator.BeginCapture(
+                    onCaptured: path =>
+                    {
+                        profile.SetControlPath(function, path);
+                        capturedPaths.Add(path);
+                        stepIndex++;
+                        RunStep();
+                    },
+                    onCancelled: Cancel,
+                    excludedPaths: capturedPaths);
+            }
+            catch (Exception e)
+            {
+                // Otherwise the menu keeps asking for a button nobody listens for.
+                Debug.LogException(e);
+                Cancel();
+            }
         }
 
         private void SkipStep()

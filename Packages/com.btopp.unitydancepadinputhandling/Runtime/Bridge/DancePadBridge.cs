@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 
@@ -63,6 +64,7 @@ namespace Btopp.UnityDancePadInputHandling
         private void OnAfterUpdate()
         {
             if (disposed || VirtualDevice == null) return;
+            if (ReadsEditorStateInPlayMode()) return;
 
             var state = new GamepadState();
             foreach (var entry in resolvedControls)
@@ -73,7 +75,24 @@ namespace Btopp.UnityDancePadInputHandling
 
             if (state.buttons == lastState.buttons) return;
             lastState = state;
-            InputSystem.QueueStateEvent(VirtualDevice, state);
+            // Not QueueStateEvent: an event queued from onAfterUpdate goes into
+            // the native buffer while that is still being handed back, and is
+            // lost (see the FIXME in InputManager.OnUpdate). InputState.Change
+            // writes the state right away and notifies actions, the same way
+            // Unity's VirtualMouseInput drives its virtual mouse. Into the
+            // buffers of the update that just read the pad, not the default
+            // update type (the editor's, while the game view has no focus).
+            InputState.Change(VirtualDevice, state, InputState.currentUpdateType);
+        }
+
+        // In play mode the editor keeps separate input state for its own
+        // updates (editor windows) and the pad's events only land in the
+        // game's state. Read during an editor update, the pad looks idle, and
+        // forwarding that would release every button the game update just
+        // pressed. Outside play mode editor updates are the only ones.
+        internal static bool ReadsEditorStateInPlayMode()
+        {
+            return Application.isPlaying && InputState.currentUpdateType == InputUpdateType.Editor;
         }
 
         public void Dispose()
